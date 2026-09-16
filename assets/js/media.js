@@ -111,14 +111,37 @@ window.CROMA_MEDIA = {
  ],
  "slots": [
   {
+   "field": "modular",
+   "n": 2,
+   "name": {
+    "ru": "Модуль 2",
+    "en": "Modular 2"
+   },
+   "bars": 0,
+   "seconds": 25.0,
+   "src": "assets/media/modular-2-839ef365af.m4a"
+  },
+  {
    "field": "acoustic",
    "n": 1,
    "name": {
-    "ru": "Фортепиано",
-    "en": "Piano"
+    "ru": "Фортепиано 1",
+    "en": "Piano 1"
    },
    "bars": 32,
-   "src": "assets/media/acoustic-1-17868ed62c.m4a"
+   "seconds": 64.0,
+   "src": "assets/media/acoustic-1-a04cadb5c2.m4a"
+  },
+  {
+   "field": "acoustic",
+   "n": 2,
+   "name": {
+    "ru": "Фортепиано 2",
+    "en": "Piano 2"
+   },
+   "bars": 0,
+   "seconds": 25.0,
+   "src": "assets/media/acoustic-2-890a75a764.m4a"
   }
  ]
 };

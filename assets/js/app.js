@@ -287,7 +287,7 @@
     });
     $('play-text').textContent = t(playing ? 'pause' : 'play');
     const sel = mixer.selection;
-    const names = [sel.modular, sel.acoustic].filter(i => !mixer.slots[i].hidden).map(i => pick(mixer.slots[i].name)).join(' + ');
+    const names = [sel.modular, sel.acoustic].filter(i => i >= 0).map(i => pick(mixer.slots[i].name)).join(' + ');
     $('player-instruction').textContent = instructionOverride
       || (playing ? t('playing', { names }) : t('instruction'));
     panel.classList.toggle('is-playing', playing);
@@ -356,7 +356,8 @@
   const canvas = $('waveform'), drawing = canvas.getContext('2d');
   function drawWaveform() {
     drawing.clearRect(0, 0, canvas.width, canvas.height);
-    const sel = mixer.selection, m = mixer.slots[sel.modular].peaks, a = mixer.slots[sel.acoustic].peaks;
+    const sel = mixer.selection;
+    const m = sel.modular >= 0 ? mixer.slots[sel.modular].peaks : null, a = sel.acoustic >= 0 ? mixer.slots[sel.acoustic].peaks : null;
     const gains = mixer.busGains();
     drawing.fillStyle = 'rgba(14, 16, 16, 0.86)';
     const values = Array.from({ length: 90 }, (_, i) => (m ? m[i] * gains.modular : 0) + (a ? a[i] * gains.acoustic : 0));
@@ -418,7 +419,8 @@
     const form = e.currentTarget;
     if (!cfg.contactEmail || !form.reportValidity()) return;
     const f = new FormData(form), sel = mixer.selection;
-    const body = `${f.get('brief')}\n\n—\n${f.get('name')}\n${f.get('email')}\n\nMix: ${pick(mixer.slots[sel.modular].name)} + ${pick(mixer.slots[sel.acoustic].name)}, ${100 - state.blend}/${state.blend}\n`;
+    const mixNames = [sel.modular, sel.acoustic].filter(i => i >= 0).map(i => pick(mixer.slots[i].name)).join(' + ');
+    const body = `${f.get('brief')}\n\n—\n${f.get('name')}\n${f.get('email')}\n\nMix: ${mixNames}, ${100 - state.blend}/${state.blend}\n`;
     location.href = `mailto:${cfg.contactEmail}?subject=${encodeURIComponent(t('mailSubject'))}&body=${encodeURIComponent(body)}`;
   });
 

@@ -1,45 +1,57 @@
 'use strict';
 /* CROMA mixer — Web Audio.
-   Все лупы крутятся одновременно на одной временной оси AudioContext.
-   Выбор источника меняет только громкость, музыка не перезапускается.
 
-   Бесшовность: AudioBufferSourceNode с loop = true, а границы loopStart/loopEnd
-   считаются из темпа и тактов, а не из длины файла. Файл собран так:
-   [хвост лупа padding с] [луп] [начало лупа padding с]. Содержимое файла периодично,
-   поэтому задержка кодека (десятки мс тишины в начале AAC/MP3) сдвигает фазу,
-   но не рвёт стык. У всех файлов один кодировщик и одна задержка — лупы остаются
-   синхронными между собой. */
+   Миксер работает парами. Пара N — модульный звук N и акустический звук N из media/миксер/.
+   Внутри пары оба лупа стартуют в один момент AudioContext и крутятся синхронно,
+   фейдеры и баланс меняют только громкость. У каждой пары своя длина лупа.
+   Переключение на другую пару меняет набор целиком: старая пара уходит коротким
+   кроссфейдом, новая начинается с начала.
+
+   Бесшовность: AudioBufferSourceNode с loop = true; loopStart/loopEnd ставятся по
+   точной длине лупа из сборки. Файл собран так: [хвост лупа 0.5 с][луп][начало лупа 0.5 с].
+   Содержимое файла периодично, поэтому задержка кодека AAC сдвигает фазу, но не рвёт стык. */
 
 window.CromaMixer = (function () {
   // Слоты и темп приходят из сборки media/ (tools/build.py → CROMA_MEDIA).
   const media = window.CROMA_MEDIA || { loop: { bpm: 120, beatsPerBar: 4, padding: 0.5 }, slots: [] };
   const barSeconds = media.loop.beatsPerBar * 60 / media.loop.bpm;
   const padding = media.loop.padding || 0;
+  const CROSSFADE = 0.12;
 
   // Всегда 8 слотов: 4 модульных и 4 акустических. Пустые скрыты.
   const slots = [];
   ['modular', 'acoustic'].forEach(field => {
     for (let n = 1; n <= 4; n++) {
       const item = media.slots.find(s => s.field === field && s.n === n);
-      const bars = item ? item.bars : 8;
+      const length = item ? (item.seconds || item.bars * barSeconds) : 0;
       slots.push({ field, n, index: slots.length, hidden: !item,
         name: item ? item.name : { en: '', ru: '' }, url: item ? item.src : '', data: item ? item.srcData : '',
-        bars, length: bars * barSeconds, buffer: null, peaks: null, source: null, gain: null, failed: false });
+        length, buffer: null, peaks: null, source: null, gain: null, failed: false });
     }
   });
-  // Общий круг — самый длинный из подключённых лупов. Короткие лупы должны делить его нацело.
-  const configured = slots.filter(s => s.url || s.data);
-  const loopLength = Math.max(...(configured.length ? configured : slots).map(s => s.length));
-  configured.forEach(s => {
-    const ratio = loopLength / s.length;
-    if (Math.abs(ratio - Math.round(ratio)) > 1e-6) console.warn(`CROMA: ${s.bars} bars do not divide the ${loopLength / barSeconds}-bar cycle`, s.url);
+
+  const pairs = [1, 2, 3, 4].map(n => {
+    const modular = slots.find(s => s.field === 'modular' && s.n === n && !s.hidden) || null;
+    const acoustic = slots.find(s => s.field === 'acoustic' && s.n === n && !s.hidden) || null;
+    const length = Math.max(modular ? modular.length : 0, acoustic ? acoustic.length : 0);
+    return { n, modular, acoustic, length };
+  }).filter(pair => pair.modular || pair.acoustic);
+  pairs.forEach(pair => {
+    if (pair.modular && pair.acoustic && Math.abs(pair.modular.length - pair.acoustic.length) > 0.01) {
+      console.warn(`CROMA: pair ${pair.n} loops have different lengths`, pair.modular.length, pair.acoustic.length);
+    }
   });
+
   const audio = { context: null, master: null, buses: {}, analyser: null, waveData: null,
     playing: false, startTime: 0, offset: 0, loading: null };
+  let active = pairs[0] || null;
+  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55 };
   const listeners = new Set();
   const emit = () => listeners.forEach(fn => fn());
 
+  const pairSlots = pair => pair ? [pair.modular, pair.acoustic].filter(Boolean) : [];
   function hasAudio(index) { return !!(slots[index].url || slots[index].data); }
+  function isReady(index) { return index >= 0 && !!slots[index].buffer; }
 
   // В одном HTML-файле звук встроен в base64: на file:// fetch запрещён.
   function base64ToArrayBuffer(text) {
@@ -47,7 +59,6 @@ window.CromaMixer = (function () {
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return bytes.buffer;
   }
-  function isReady(index) { return !!slots[index].buffer; }
 
   function ensureContext() {
     if (audio.context) return audio.context;
@@ -62,6 +73,7 @@ window.CromaMixer = (function () {
     audio.buses.modular.connect(audio.master); audio.buses.acoustic.connect(audio.master);
     audio.master.connect(audio.analyser); audio.analyser.connect(ctx.destination);
     ctx.addEventListener('statechange', () => { if (audio.playing && ctx.state === 'interrupted') pause(); });
+    applyMix();
     return ctx;
   }
 
@@ -76,19 +88,17 @@ window.CromaMixer = (function () {
   function calculatePeaks(buffer, seconds) {
     const data = buffer.getChannelData(0), count = 90, peaks = new Float32Array(count);
     const first = Math.round(padding * buffer.sampleRate);
-    // Волна рисуется на весь общий круг: короткий луп повторяется.
-    const own = Math.round(seconds * buffer.sampleRate);
-    const length = Math.round(loopLength * buffer.sampleRate);
+    const length = Math.min(Math.round(seconds * buffer.sampleRate), data.length - first);
     for (let i = 0; i < count; i++) {
       const begin = first + Math.floor(i * length / count), end = first + Math.floor((i + 1) * length / count);
       let peak = 0;
-      for (let j = begin; j < end; j += 12) peak = Math.max(peak, Math.abs(data[first + (j - first) % own]));
+      for (let j = begin; j < end; j += 12) peak = Math.max(peak, Math.abs(data[j]));
       peaks[i] = peak;
     }
     return peaks;
   }
 
-  // Загружает все лупы из конфигурации. Повторный вызов возвращает ту же загрузку.
+  // Загружает все лупы. Повторный вызов возвращает ту же загрузку.
   function load() {
     if (audio.loading) return audio.loading;
     const ctx = ensureContext();
@@ -114,10 +124,6 @@ window.CromaMixer = (function () {
     return audio.loading;
   }
 
-  const firstVisible = field => (slots.find(s => s.field === field && !s.hidden) || slots.find(s => s.field === field)).index;
-  let selection = { modular: firstVisible('modular'), acoustic: firstVisible('acoustic') };
-  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55 };
-
   function smooth(param, value, timeConstant = 0.024) {
     const now = audio.context.currentTime;
     param.cancelScheduledValues(now);
@@ -135,39 +141,59 @@ window.CromaMixer = (function () {
     const gains = busGains();
     smooth(audio.buses.modular.gain, gains.modular);
     smooth(audio.buses.acoustic.gain, gains.acoustic);
-    slots.forEach(slot => {
-      if (slot.gain) smooth(slot.gain.gain, selection[slot.field] === slot.index ? 1 : 0, 0.03);
+  }
+
+  function phase() {
+    const length = active ? active.length : 0;
+    if (!length) return 0;
+    if (!audio.playing) return audio.offset % length;
+    const elapsed = audio.context.currentTime - audio.startTime;
+    return elapsed <= 0 ? 0 : elapsed % length;   // до старта новой пары показываем начало
+  }
+
+  function startPair(pair, when, offset, fadeIn) {
+    const ctx = audio.context;
+    pairSlots(pair).forEach(slot => {
+      if (!slot.buffer) return;
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      source.buffer = slot.buffer;
+      source.loop = true;
+      source.loopStart = padding;
+      source.loopEnd = padding + slot.length;
+      if (fadeIn) {
+        gain.gain.setValueAtTime(0, when);
+        gain.gain.linearRampToValueAtTime(1, when + CROSSFADE);
+      }
+      source.connect(gain); gain.connect(audio.buses[slot.field]);
+      source.start(when, padding + offset % slot.length);
+      source.onended = () => { try { source.disconnect(); gain.disconnect(); } catch (_) {} };
+      slot.source = source; slot.gain = gain;
     });
   }
-  function phase() {
-    if (!audio.playing) return audio.offset;
-    return ((audio.context.currentTime - audio.startTime) % loopLength + loopLength) % loopLength;
-  }
-  function startSource(slot, when, offset) {
-    const ctx = audio.context;
-    const source = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    source.buffer = slot.buffer;
-    source.loop = true;
-    source.loopStart = padding;
-    source.loopEnd = padding + slot.length;
-    gain.gain.value = selection[slot.field] === slot.index ? 1 : 0;
-    source.connect(gain); gain.connect(audio.buses[slot.field]);
-    source.start(when, padding + offset % slot.length);
-    source.onended = () => { try { source.disconnect(); gain.disconnect(); } catch (_) {} };
-    slot.source = source; slot.gain = gain;
+  function stopPair(pair, fadeOut) {
+    const now = audio.context.currentTime;
+    pairSlots(pair).forEach(slot => {
+      if (!slot.source) return;
+      if (fadeOut) {
+        slot.gain.gain.cancelScheduledValues(now);
+        slot.gain.gain.setValueAtTime(slot.gain.gain.value, now);
+        slot.gain.gain.linearRampToValueAtTime(0, now + CROSSFADE);
+      }
+      try { slot.source.stop(now + (fadeOut ? CROSSFADE + 0.02 : 0.12)); } catch (_) {}
+      slot.source = null; slot.gain = null;
+    });
   }
 
   async function play() {
-    if (audio.playing) return;
+    if (audio.playing || !active) return;
     const ctx = ensureContext();
     if (ctx.state !== 'running') await ctx.resume();
     await load();
-    if (!isReady(selection.modular) && !isReady(selection.acoustic)) throw new Error('no-audio');
-    // Один момент старта для всех лупов — поэтому они совпадают до сэмпла.
+    if (!pairSlots(active).some(slot => slot.buffer)) throw new Error('no-audio');
     const when = ctx.currentTime + 0.08;
     audio.startTime = when - audio.offset;
-    slots.forEach(slot => { if (slot.buffer) startSource(slot, when, audio.offset); });
+    startPair(active, when, audio.offset, false);
     audio.playing = true;
     applyMix();
     smooth(audio.master.gain, 0.72, 0.03);
@@ -178,12 +204,23 @@ window.CromaMixer = (function () {
     if (!audio.playing) return;
     audio.offset = phase();
     audio.playing = false;
-    const end = audio.context.currentTime + 0.12;
     smooth(audio.master.gain, 0, 0.02);
-    slots.forEach(slot => {
-      if (slot.source) { try { slot.source.stop(end); } catch (_) {} }
-      slot.source = null; slot.gain = null;
-    });
+    stopPair(active, false);
+    emit();
+  }
+
+  // Смена пары: весь набор меняется, новая пара начинается с начала лупа.
+  function selectPair(n) {
+    const next = pairs.find(pair => pair.n === n);
+    if (!next || next === active) return;
+    if (audio.playing) {
+      stopPair(active, true);
+      const when = audio.context.currentTime + 0.02;
+      audio.startTime = when;
+      startPair(next, when, 0, true);
+    }
+    audio.offset = 0;
+    active = next;
     emit();
   }
 
@@ -198,12 +235,19 @@ window.CromaMixer = (function () {
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
   return {
-    slots, loopLength,
+    slots, pairs,
+    get loopLength() { return active ? active.length : 0; },
     get playing() { return audio.playing; },
     get anyConfigured() { return slots.some(s => s.url || s.data); },
+    get activePair() { return active ? active.n : 0; },
+    // Выбранные звуки: индексы слотов активной пары, -1 — в этом поле у пары звука нет.
+    get selection() {
+      return { modular: active && active.modular ? active.modular.index : -1,
+               acoustic: active && active.acoustic ? active.acoustic.index : -1 };
+    },
     hasAudio, isReady, load, play, pause, phase, level, busGains,
-    select(field, index) { selection[field] = index; applyMix(); emit(); },
-    get selection() { return selection; },
+    select(field, index) { selectPair(slots[index].n); },
+    selectPair,
     setMix(values) { mix = { ...mix, ...values }; applyMix(); },
     onChange(fn) { listeners.add(fn); }
   };
