@@ -77,12 +77,12 @@ window.CROMA_MEDIA = {
     "en": "Modular practice"
    },
    "credit": {
-    "ru": "Живая электроника / модульный синтез",
-    "en": "Live electronics / modular synthesis"
+    "ru": "Живая электроника / Buchla и модульный синтез",
+    "en": "Live electronics / Buchla and modular synthesis"
    },
    "detail": {
-    "ru": "Живое модульное выступление участника команды. Электронный материал CROMA строится на модульных системах и развивается в композиции и на сцене.",
-    "en": "A live modular performance by a team member. The electronic material of CROMA is built on modular systems and developed through composition and performance."
+    "ru": "Живое модульное выступление участника команды. Электронный материал CROMA пишется на профессиональном модульном оборудовании, в том числе на Buchla, и развивается в композиции и на сцене.",
+    "en": "A live modular performance by a team member. The electronic material of CROMA is written on professional modular equipment, including Buchla, and developed through composition and performance."
    },
    "link": "",
    "position": "50% 45%",
@@ -109,39 +109,46 @@ window.CROMA_MEDIA = {
    "src": "assets/media/team-cello-400f942e59.webp"
   }
  ],
- "slots": [
+ "scenes": [
   {
-   "field": "modular",
-   "n": 2,
-   "name": {
-    "ru": "Модуль 2",
-    "en": "Modular 2"
-   },
-   "bars": 0,
-   "seconds": 25.0,
-   "src": "assets/media/modular-2-839ef365af.m4a"
-  },
-  {
-   "field": "acoustic",
    "n": 1,
    "name": {
-    "ru": "Фортепиано 1",
-    "en": "Piano 1"
+    "ru": "Сцена 1",
+    "en": "Scene 1"
    },
-   "bars": 32,
-   "seconds": 64.0,
-   "src": "assets/media/acoustic-1-a04cadb5c2.m4a"
+   "layers": {
+    "rhythm": {
+     "seconds": 32.0,
+     "src": "assets/media/scene-1-rhythm-ee413a7ece.m4a"
+    },
+    "modular": {
+     "seconds": 32.0,
+     "src": "assets/media/scene-1-modular-1f963fac08.m4a"
+    },
+    "acoustic": {
+     "seconds": 32.0,
+     "src": "assets/media/scene-1-acoustic-17c5ddb3e5.m4a"
+    }
+   },
+   "seconds": 32.0
   },
   {
-   "field": "acoustic",
    "n": 2,
    "name": {
-    "ru": "Фортепиано 2",
-    "en": "Piano 2"
+    "ru": "Сцена 2",
+    "en": "Scene 2"
    },
-   "bars": 0,
-   "seconds": 25.0,
-   "src": "assets/media/acoustic-2-890a75a764.m4a"
+   "layers": {
+    "modular": {
+     "seconds": 25.0,
+     "src": "assets/media/scene-2-modular-69e49b3215.m4a"
+    },
+    "acoustic": {
+     "seconds": 25.0,
+     "src": "assets/media/scene-2-acoustic-6cf47b3b45.m4a"
+    }
+   },
+   "seconds": 25.0
   }
  ]
 };

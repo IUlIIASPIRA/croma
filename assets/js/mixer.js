@@ -1,57 +1,39 @@
 'use strict';
 /* CROMA mixer — Web Audio.
 
-   Миксер работает парами. Пара N — модульный звук N и акустический звук N из media/миксер/.
-   Внутри пары оба лупа стартуют в один момент AudioContext и крутятся синхронно,
-   фейдеры и баланс меняют только громкость. У каждой пары своя длина лупа.
-   Переключение на другую пару меняет набор целиком: старая пара уходит коротким
-   кроссфейдом, новая начинается с начала.
+   Миксер работает сценами. Сцена — папка в media/миксер/ с готовыми лупами одной длины:
+   модульный слой, акустический и, если есть, ритм. Все слои сцены стартуют в один момент
+   AudioContext и крутятся синхронно; фейдеры и баланс меняют только громкость.
+   У каждой сцены своя длина. Переключение сцены меняет набор целиком: старая уходит
+   коротким кроссфейдом, новая начинается с начала.
 
-   Бесшовность: AudioBufferSourceNode с loop = true; loopStart/loopEnd ставятся по
-   точной длине лупа из сборки. Файл собран так: [хвост лупа 0.5 с][луп][начало лупа 0.5 с].
+   Бесшовность: AudioBufferSourceNode с loop = true; loopStart/loopEnd ставятся по точной
+   длине лупа из сборки. Файл собран так: [хвост лупа 0.5 с][луп][начало лупа 0.5 с].
    Содержимое файла периодично, поэтому задержка кодека AAC сдвигает фазу, но не рвёт стык. */
 
 window.CromaMixer = (function () {
-  // Слоты и темп приходят из сборки media/ (tools/build.py → CROMA_MEDIA).
-  const media = window.CROMA_MEDIA || { loop: { bpm: 120, beatsPerBar: 4, padding: 0.5 }, slots: [] };
-  const barSeconds = media.loop.beatsPerBar * 60 / media.loop.bpm;
+  const media = window.CROMA_MEDIA || { loop: { padding: 0.5 }, scenes: [] };
   const padding = media.loop.padding || 0;
   const CROSSFADE = 0.12;
+  const ROLES = ['modular', 'acoustic', 'rhythm'];
 
-  // Всегда 8 слотов: 4 модульных и 4 акустических. Пустые скрыты.
-  const slots = [];
-  ['modular', 'acoustic'].forEach(field => {
-    for (let n = 1; n <= 4; n++) {
-      const item = media.slots.find(s => s.field === field && s.n === n);
-      const length = item ? (item.seconds || item.bars * barSeconds) : 0;
-      slots.push({ field, n, index: slots.length, hidden: !item,
-        name: item ? item.name : { en: '', ru: '' }, url: item ? item.src : '', data: item ? item.srcData : '',
-        length, buffer: null, peaks: null, source: null, gain: null, failed: false });
-    }
-  });
-
-  const pairs = [1, 2, 3, 4].map(n => {
-    const modular = slots.find(s => s.field === 'modular' && s.n === n && !s.hidden) || null;
-    const acoustic = slots.find(s => s.field === 'acoustic' && s.n === n && !s.hidden) || null;
-    const length = Math.max(modular ? modular.length : 0, acoustic ? acoustic.length : 0);
-    return { n, modular, acoustic, length };
-  }).filter(pair => pair.modular || pair.acoustic);
-  pairs.forEach(pair => {
-    if (pair.modular && pair.acoustic && Math.abs(pair.modular.length - pair.acoustic.length) > 0.01) {
-      console.warn(`CROMA: pair ${pair.n} loops have different lengths`, pair.modular.length, pair.acoustic.length);
-    }
-  });
+  const scenes = (media.scenes || []).map(scene => ({
+    n: scene.n,
+    name: scene.name,
+    length: scene.seconds,
+    layers: ROLES.filter(role => scene.layers[role]).map(role => ({
+      role, length: scene.layers[role].seconds,
+      url: scene.layers[role].src || '', data: scene.layers[role].srcData || '',
+      buffer: null, peaks: null, source: null, gain: null, failed: false
+    }))
+  }));
 
   const audio = { context: null, master: null, buses: {}, analyser: null, waveData: null,
     playing: false, startTime: 0, offset: 0, loading: null };
-  let active = pairs[0] || null;
-  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55 };
+  let active = scenes[0] || null;
+  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 55 };
   const listeners = new Set();
   const emit = () => listeners.forEach(fn => fn());
-
-  const pairSlots = pair => pair ? [pair.modular, pair.acoustic].filter(Boolean) : [];
-  function hasAudio(index) { return !!(slots[index].url || slots[index].data); }
-  function isReady(index) { return index >= 0 && !!slots[index].buffer; }
 
   // В одном HTML-файле звук встроен в base64: на file:// fetch запрещён.
   function base64ToArrayBuffer(text) {
@@ -67,10 +49,9 @@ window.CromaMixer = (function () {
     const ctx = new AC({ latencyHint: 'playback' });
     audio.context = ctx;
     audio.master = ctx.createGain(); audio.master.gain.value = 0;
-    audio.buses.modular = ctx.createGain(); audio.buses.acoustic = ctx.createGain();
+    ROLES.forEach(role => { audio.buses[role] = ctx.createGain(); audio.buses[role].connect(audio.master); });
     audio.analyser = ctx.createAnalyser(); audio.analyser.fftSize = 1024;
     audio.waveData = new Float32Array(audio.analyser.fftSize);
-    audio.buses.modular.connect(audio.master); audio.buses.acoustic.connect(audio.master);
     audio.master.connect(audio.analyser); audio.analyser.connect(ctx.destination);
     ctx.addEventListener('statechange', () => { if (audio.playing && ctx.state === 'interrupted') pause(); });
     applyMix();
@@ -98,26 +79,26 @@ window.CromaMixer = (function () {
     return peaks;
   }
 
-  // Загружает все лупы. Повторный вызов возвращает ту же загрузку.
+  // Загружает все лупы всех сцен. Повторный вызов возвращает ту же загрузку.
   function load() {
     if (audio.loading) return audio.loading;
     const ctx = ensureContext();
-    audio.loading = Promise.all(slots.map(async slot => {
-      if (!slot.url && !slot.data) return;
+    const layers = scenes.flatMap(scene => scene.layers);
+    audio.loading = Promise.all(layers.map(async layer => {
       try {
         let bytes;
-        if (slot.data) bytes = base64ToArrayBuffer(slot.data);
+        if (layer.data) bytes = base64ToArrayBuffer(layer.data);
         else {
-          const response = await fetch(slot.url);
+          const response = await fetch(layer.url);
           if (!response.ok) throw new Error(String(response.status));
           bytes = await response.arrayBuffer();
         }
         const buffer = await decode(ctx, bytes);
-        if (buffer.duration + 0.001 < padding + slot.length) throw new Error('too-short');
-        slot.buffer = buffer; slot.peaks = calculatePeaks(buffer, slot.length);
+        if (buffer.duration + 0.001 < padding + layer.length) throw new Error('too-short');
+        layer.buffer = buffer; layer.peaks = calculatePeaks(buffer, layer.length);
       } catch (error) {
-        slot.failed = true;
-        console.warn('CROMA loop failed:', slot.url, error.message);
+        layer.failed = true;
+        console.warn('CROMA loop failed:', layer.url, error.message);
       }
       emit();
     }));
@@ -129,18 +110,19 @@ window.CromaMixer = (function () {
     param.cancelScheduledValues(now);
     param.setTargetAtTime(value, now, timeConstant);
   }
+  // Баланс делит модульное и акустическое поле с равной мощностью; ритм — своим фейдером.
   function busGains() {
     const ratio = mix.blend / 100;
     return {
       modular: Math.cos(ratio * Math.PI / 2) * mix.modularVolume / 100,
-      acoustic: Math.sin(ratio * Math.PI / 2) * mix.acousticVolume / 100
+      acoustic: Math.sin(ratio * Math.PI / 2) * mix.acousticVolume / 100,
+      rhythm: mix.rhythmVolume / 100
     };
   }
   function applyMix() {
     if (!audio.context) return;
     const gains = busGains();
-    smooth(audio.buses.modular.gain, gains.modular);
-    smooth(audio.buses.acoustic.gain, gains.acoustic);
+    ROLES.forEach(role => smooth(audio.buses[role].gain, gains[role]));
   }
 
   function phase() {
@@ -148,40 +130,40 @@ window.CromaMixer = (function () {
     if (!length) return 0;
     if (!audio.playing) return audio.offset % length;
     const elapsed = audio.context.currentTime - audio.startTime;
-    return elapsed <= 0 ? 0 : elapsed % length;   // до старта новой пары показываем начало
+    return elapsed <= 0 ? 0 : elapsed % length;   // до старта новой сцены показываем начало
   }
 
-  function startPair(pair, when, offset, fadeIn) {
+  function startScene(scene, when, offset, fadeIn) {
     const ctx = audio.context;
-    pairSlots(pair).forEach(slot => {
-      if (!slot.buffer) return;
+    scene.layers.forEach(layer => {
+      if (!layer.buffer) return;
       const source = ctx.createBufferSource();
       const gain = ctx.createGain();
-      source.buffer = slot.buffer;
+      source.buffer = layer.buffer;
       source.loop = true;
       source.loopStart = padding;
-      source.loopEnd = padding + slot.length;
+      source.loopEnd = padding + layer.length;
       if (fadeIn) {
         gain.gain.setValueAtTime(0, when);
         gain.gain.linearRampToValueAtTime(1, when + CROSSFADE);
       }
-      source.connect(gain); gain.connect(audio.buses[slot.field]);
-      source.start(when, padding + offset % slot.length);
+      source.connect(gain); gain.connect(audio.buses[layer.role]);
+      source.start(when, padding + offset % layer.length);
       source.onended = () => { try { source.disconnect(); gain.disconnect(); } catch (_) {} };
-      slot.source = source; slot.gain = gain;
+      layer.source = source; layer.gain = gain;
     });
   }
-  function stopPair(pair, fadeOut) {
+  function stopScene(scene, fadeOut) {
     const now = audio.context.currentTime;
-    pairSlots(pair).forEach(slot => {
-      if (!slot.source) return;
+    scene.layers.forEach(layer => {
+      if (!layer.source) return;
       if (fadeOut) {
-        slot.gain.gain.cancelScheduledValues(now);
-        slot.gain.gain.setValueAtTime(slot.gain.gain.value, now);
-        slot.gain.gain.linearRampToValueAtTime(0, now + CROSSFADE);
+        layer.gain.gain.cancelScheduledValues(now);
+        layer.gain.gain.setValueAtTime(layer.gain.gain.value, now);
+        layer.gain.gain.linearRampToValueAtTime(0, now + CROSSFADE);
       }
-      try { slot.source.stop(now + (fadeOut ? CROSSFADE + 0.02 : 0.12)); } catch (_) {}
-      slot.source = null; slot.gain = null;
+      try { layer.source.stop(now + (fadeOut ? CROSSFADE + 0.02 : 0.12)); } catch (_) {}
+      layer.source = null; layer.gain = null;
     });
   }
 
@@ -190,10 +172,10 @@ window.CromaMixer = (function () {
     const ctx = ensureContext();
     if (ctx.state !== 'running') await ctx.resume();
     await load();
-    if (!pairSlots(active).some(slot => slot.buffer)) throw new Error('no-audio');
+    if (!active.layers.some(layer => layer.buffer)) throw new Error('no-audio');
     const when = ctx.currentTime + 0.08;
     audio.startTime = when - audio.offset;
-    startPair(active, when, audio.offset, false);
+    startScene(active, when, audio.offset, false);
     audio.playing = true;
     applyMix();
     smooth(audio.master.gain, 0.72, 0.03);
@@ -205,19 +187,18 @@ window.CromaMixer = (function () {
     audio.offset = phase();
     audio.playing = false;
     smooth(audio.master.gain, 0, 0.02);
-    stopPair(active, false);
+    stopScene(active, false);
     emit();
   }
 
-  // Смена пары: весь набор меняется, новая пара начинается с начала лупа.
-  function selectPair(n) {
-    const next = pairs.find(pair => pair.n === n);
+  function selectScene(n) {
+    const next = scenes.find(scene => scene.n === n);
     if (!next || next === active) return;
     if (audio.playing) {
-      stopPair(active, true);
+      stopScene(active, true);
       const when = audio.context.currentTime + 0.02;
       audio.startTime = when;
-      startPair(next, when, 0, true);
+      startScene(next, when, 0, true);
     }
     audio.offset = 0;
     active = next;
@@ -235,19 +216,13 @@ window.CromaMixer = (function () {
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
   return {
-    slots, pairs,
+    scenes,
+    get active() { return active; },
     get loopLength() { return active ? active.length : 0; },
     get playing() { return audio.playing; },
-    get anyConfigured() { return slots.some(s => s.url || s.data); },
-    get activePair() { return active ? active.n : 0; },
-    // Выбранные звуки: индексы слотов активной пары, -1 — в этом поле у пары звука нет.
-    get selection() {
-      return { modular: active && active.modular ? active.modular.index : -1,
-               acoustic: active && active.acoustic ? active.acoustic.index : -1 };
-    },
-    hasAudio, isReady, load, play, pause, phase, level, busGains,
-    select(field, index) { selectPair(slots[index].n); },
-    selectPair,
+    get anyConfigured() { return scenes.some(scene => scene.layers.length); },
+    hasLayer(role) { return !!(active && active.layers.some(layer => layer.role === role)); },
+    load, play, pause, phase, level, busGains, selectScene,
     setMix(values) { mix = { ...mix, ...values }; applyMix(); },
     onChange(fn) { listeners.add(fn); }
   };

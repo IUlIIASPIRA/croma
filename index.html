@@ -7,7 +7,7 @@
 <meta name="description" content="Original music, sound design and spatial systems at the intersection of electronic structure and acoustic warmth.">
 <title>CROMA — sound collective</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23b9babb'/%3E%3Cg fill='%23141414'%3E%3Ccircle cx='14' cy='12' r='3'/%3E%3Ccircle cx='24' cy='20' r='3'/%3E%3Ccircle cx='14' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/css/croma.css">
+<link rel="stylesheet" href="assets/css/croma.css?v=585c290f">
 <script>
   // Язык выбирается до отрисовки, чтобы не мигал английский текст.
   (function () {
@@ -78,8 +78,8 @@
    <aside class="face built"><p class="micro" data-i18n-html="built"></p></aside>
 
    <section class="face player" id="player" data-module="fragments" tabindex="-1" aria-labelledby="modular-heading">
-    <h2 class="field-title modular-title" id="modular-heading" data-i18n="modularField">MODULAR FIELD</h2>
-    <div class="source-bank modular-bank" id="modular-bank" role="group" aria-labelledby="modular-heading"></div>
+    <h2 class="field-title modular-title" id="scene-heading" data-i18n="scenes">SCENES</h2>
+    <div class="source-bank modular-bank" id="scene-bank" role="group" aria-labelledby="scene-heading"></div>
 
     <div class="level-control modular-level" role="slider" tabindex="0" data-i18n-aria="modularVolume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55" aria-orientation="vertical" data-param="modularVolume" data-vertical="true">
      <span class="level-rail" aria-hidden="true"></span><span class="level-cap" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">55</span>
@@ -93,8 +93,11 @@
     </div>
     <div class="signal-pin" id="signal-pin" aria-hidden="true"></div>
 
-    <h2 class="field-title acoustic-title" id="acoustic-heading" data-i18n="acousticField">ACOUSTIC FIELD</h2>
-    <div class="source-bank acoustic-bank" id="acoustic-bank" role="group" aria-labelledby="acoustic-heading"></div>
+    <h2 class="field-title acoustic-title" id="rhythm-heading" data-i18n="rhythm">RHYTHM</h2>
+    <div class="rhythm-row">
+     <div class="rhythm-level" id="rhythm-level" role="slider" tabindex="0" aria-labelledby="rhythm-heading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55" data-param="rhythmVolume"><span class="polished-rail" aria-hidden="true"></span><span class="black-puck" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">55</span></div>
+     <p class="rhythm-note micro" id="rhythm-note" data-i18n="noRhythm" hidden>NO RHYTHM IN THIS SCENE</p>
+    </div>
     <div class="blend-row">
      <span class="micro blend-text" data-i18n-html="electronic"></span>
      <div class="fine-balance" role="slider" tabindex="0" data-i18n-aria="balance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-param="blend"><span class="fine-rail" aria-hidden="true"></span><span class="black-puck" aria-hidden="true"></span></div>
@@ -161,9 +164,9 @@
  </form>
 </dialog>
 
-<script src="assets/js/media.js"></script>
-<script src="assets/js/content.js"></script>
-<script src="assets/js/mixer.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/media.js?v=e5a9ece6"></script>
+<script src="assets/js/content.js?v=2e2e5ea0"></script>
+<script src="assets/js/mixer.js?v=86eb2098"></script>
+<script src="assets/js/app.js?v=ce22c810"></script>
 </body>
 </html>

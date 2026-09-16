@@ -8,7 +8,7 @@
   // Совпадает с медиазапросом ленты в croma.css.
   const flow = matchMedia('(max-width: 980px), (orientation: portrait) and (max-width: 1180px)');
   const state = { lang: document.documentElement.lang === 'ru' ? 'ru' : 'en', focus: null, work: 0,
-    blend: 50, modularVolume: 55, acousticVolume: 55 };
+    blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 55 };
   const media = window.CROMA_MEDIA || { team: [], approach: null };
   const team = media.team;
 
@@ -53,7 +53,7 @@
     document.querySelectorAll('[data-i18n-title]').forEach(el => el.setAttribute('title', t(el.dataset.i18nTitle)));
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder)));
     document.querySelectorAll('.lang-key').forEach(key => key.setAttribute('aria-pressed', String(key.dataset.lang === state.lang)));
-    renderMethods(); renderSources(); renderWork(false); renderTransport();
+    renderMethods(); renderScenes(); renderWork(false); renderTransport();
   }
   document.querySelectorAll('.lang-key').forEach(key => key.addEventListener('click', () => {
     if (state.lang === key.dataset.lang) return;
@@ -243,35 +243,35 @@
   video.addEventListener('play', () => mixer.pause());
 
   /* ---------- Миксер ---------- */
-  const banks = { modular: $('modular-bank'), acoustic: $('acoustic-bank') };
-  function renderSources(changed = -1) {
-    banks.modular.textContent = ''; banks.acoustic.textContent = '';
-    mixer.slots.forEach(slot => {
-      if (slot.hidden) return;
-      const i = slot.index, local = i - (slot.field === 'modular' ? 0 : 4);
+  // Сцены: кнопки в верхнем ряду панели. Ритм — отдельный фейдер, активен, если он есть в сцене.
+  function renderScenes(changed = 0) {
+    const bank = $('scene-bank');
+    bank.textContent = '';
+    mixer.scenes.forEach((scene, i) => {
       const button = document.createElement('button');
-      button.className = 'source'; button.dataset.index = i; button.dataset.glyph = local % 4;
-      button.classList.toggle('is-empty', !mixer.hasAudio(i));
-      button.setAttribute('aria-pressed', String(mixer.selection[slot.field] === i));
-      button.setAttribute('aria-label', t('selectSource', { name: pick(slot.name) }));
+      button.className = 'source'; button.dataset.scene = scene.n; button.dataset.glyph = i % 4;
+      button.setAttribute('aria-pressed', String(mixer.active === scene));
+      button.setAttribute('aria-label', t('selectScene', { name: pick(scene.name) }));
       const label = document.createElement('span'); label.className = 'source-index';
-      label.textContent = slot.field === 'modular' ? String(local + 1).padStart(2, '0') : pick(slot.name);
+      label.textContent = String(scene.n).padStart(2, '0');
       const glyph = document.createElement('span'); glyph.className = 'dot-glyph'; glyph.setAttribute('aria-hidden', 'true');
       for (let k = 0; k < 3; k++) glyph.appendChild(document.createElement('i'));
-      button.append(label, glyph);
-      if (slot.field === 'modular') {
-        const name = document.createElement('span'); name.className = 'source-name'; name.textContent = pick(slot.name);
-        button.appendChild(name);
-      }
-      if (i === changed && !reduced.matches) button.classList.add('selection-arrival');
+      const name = document.createElement('span'); name.className = 'source-name'; name.textContent = pick(scene.name);
+      button.append(label, glyph, name);
+      if (scene.n === changed && !reduced.matches) button.classList.add('selection-arrival');
       button.addEventListener('click', () => {
-        mixer.select(slot.field, i);
-        renderSources(i);
-        document.querySelector(`.source[data-index="${i}"]`).focus({ preventScroll: true });
-        if (mixer.playing && !mixer.isReady(i)) setInstruction(t('noAudio'));
+        mixer.selectScene(scene.n);
+        renderScenes(scene.n);
+        bank.querySelector(`[data-scene="${scene.n}"]`).focus({ preventScroll: true });
       });
-      banks[slot.field].appendChild(button);
+      bank.appendChild(button);
     });
+    const hasRhythm = mixer.hasLayer('rhythm');
+    const rhythm = $('rhythm-level');
+    rhythm.classList.toggle('is-off', !hasRhythm);
+    rhythm.setAttribute('aria-disabled', String(!hasRhythm));
+    rhythm.tabIndex = hasRhythm ? 0 : -1;
+    $('rhythm-note').hidden = hasRhythm;
     drawWaveform();
   }
 
@@ -286,8 +286,7 @@
       b.disabled = !mixer.anyConfigured;
     });
     $('play-text').textContent = t(playing ? 'pause' : 'play');
-    const sel = mixer.selection;
-    const names = [sel.modular, sel.acoustic].filter(i => i >= 0).map(i => pick(mixer.slots[i].name)).join(' + ');
+    const names = mixer.active ? pick(mixer.active.name) : '';
     $('player-instruction').textContent = instructionOverride
       || (playing ? t('playing', { names }) : t('instruction'));
     panel.classList.toggle('is-playing', playing);
@@ -316,7 +315,7 @@
   mixer.onChange(() => { renderTransport(); drawWaveform(); renderTime(); });
 
   function renderParameters() {
-    ['blend', 'modularVolume', 'acousticVolume'].forEach(name => panel.style.setProperty(`--${name}`, String(state[name])));
+    ['blend', 'modularVolume', 'acousticVolume', 'rhythmVolume'].forEach(name => panel.style.setProperty(`--${name}`, String(state[name])));
     document.querySelectorAll('[role=slider]').forEach(control => {
       const name = control.dataset.param, value = state[name];
       control.setAttribute('aria-valuenow', String(value));
@@ -324,12 +323,12 @@
       const readout = control.querySelector('.control-readout');
       if (readout) readout.textContent = name === 'blend' ? `${100 - value} / ${value}` : String(value);
     });
-    mixer.setMix({ blend: state.blend, modularVolume: state.modularVolume, acousticVolume: state.acousticVolume });
+    mixer.setMix({ blend: state.blend, modularVolume: state.modularVolume, acousticVolume: state.acousticVolume, rhythmVolume: state.rhythmVolume });
     drawWaveform(); paintLight();
   }
   document.querySelectorAll('[role=slider]').forEach(control => {
     const name = control.dataset.param, vertical = control.dataset.vertical === 'true';
-    const rail = () => control.querySelector(vertical ? '.level-rail' : control.classList.contains('main-balance') ? '.polished-rail' : '.fine-rail');
+    const rail = () => control.querySelector('.level-rail, .polished-rail, .fine-rail');
     const update = e => {
       const r = rail().getBoundingClientRect();
       const n = vertical ? 1 - (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width;
@@ -337,7 +336,7 @@
       renderParameters();
     };
     control.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || control.getAttribute('aria-disabled') === 'true') return;
       e.preventDefault(); control.focus({ preventScroll: true });
       control.setPointerCapture(e.pointerId); control.classList.add('dragging'); update(e);
     });
@@ -346,7 +345,7 @@
     control.addEventListener('pointerup', release); control.addEventListener('pointercancel', release);
     control.addEventListener('lostpointercapture', () => control.classList.remove('dragging'));
     control.addEventListener('keydown', e => {
-      if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+      if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key) || control.getAttribute('aria-disabled') === 'true') return;
       e.preventDefault(); const step = e.shiftKey ? 10 : 1;
       state[name] = e.key === 'Home' ? 0 : e.key === 'End' ? 100 : Math.max(0, Math.min(100, state[name] + (['ArrowRight', 'ArrowUp'].includes(e.key) ? step : -step)));
       renderParameters();
@@ -356,11 +355,10 @@
   const canvas = $('waveform'), drawing = canvas.getContext('2d');
   function drawWaveform() {
     drawing.clearRect(0, 0, canvas.width, canvas.height);
-    const sel = mixer.selection;
-    const m = sel.modular >= 0 ? mixer.slots[sel.modular].peaks : null, a = sel.acoustic >= 0 ? mixer.slots[sel.acoustic].peaks : null;
+    const layers = mixer.active ? mixer.active.layers.filter(layer => layer.peaks) : [];
     const gains = mixer.busGains();
     drawing.fillStyle = 'rgba(14, 16, 16, 0.86)';
-    const values = Array.from({ length: 90 }, (_, i) => (m ? m[i] * gains.modular : 0) + (a ? a[i] * gains.acoustic : 0));
+    const values = Array.from({ length: 90 }, (_, i) => layers.reduce((sum, layer) => sum + layer.peaks[i] * gains[layer.role], 0));
     const maximum = Math.max(0.05, ...values);
     values.forEach((v, i) => {
       const height = Math.max(1.5, (v / maximum) * 64);
@@ -418,8 +416,8 @@
     e.preventDefault();
     const form = e.currentTarget;
     if (!cfg.contactEmail || !form.reportValidity()) return;
-    const f = new FormData(form), sel = mixer.selection;
-    const mixNames = [sel.modular, sel.acoustic].filter(i => i >= 0).map(i => pick(mixer.slots[i].name)).join(' + ');
+    const f = new FormData(form);
+    const mixNames = mixer.active ? pick(mixer.active.name) : '';
     const body = `${f.get('brief')}\n\n—\n${f.get('name')}\n${f.get('email')}\n\nMix: ${mixNames}, ${100 - state.blend}/${state.blend}\n`;
     location.href = `mailto:${cfg.contactEmail}?subject=${encodeURIComponent(t('mailSubject'))}&body=${encodeURIComponent(body)}`;
   });

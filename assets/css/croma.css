@@ -135,6 +135,12 @@ html[lang=ru] .blend-text{letter-spacing:1.3px}
 .fine-balance{position:relative;width:236px;height:48px;cursor:ew-resize;touch-action:none;user-select:none}
 .fine-rail{position:absolute;top:24px;left:0;right:0;height:1px;background:#292b2b;box-shadow:0 1px 0 #ffffff55}
 .fine-balance .black-puck{top:24px;width:20px;height:20px}
+.rhythm-row{position:absolute;left:220px;top:512px;width:244px;height:70px;display:grid;place-items:center}
+.rhythm-level{position:relative;width:156px;height:44px;cursor:ew-resize;touch-action:none;user-select:none}
+.rhythm-level .black-puck{left:calc(var(--rhythmVolume) * 1%)}
+.rhythm-level .control-readout{top:43px}
+.rhythm-level.is-off{opacity:.28;cursor:default}
+.rhythm-note{position:absolute;left:-40px;right:-40px;top:52px;margin:0;text-align:center;font-size:10px;letter-spacing:1.4px;white-space:nowrap}
 .master-play{position:absolute;left:282px;top:699px;width:120px;height:65px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:opacity .18s,transform .12s}
 .master-play svg{width:27px;height:27px;transition:transform .18s}
 .master-play span{font-size:12px;line-height:20px;letter-spacing:4px;margin-left:4px}
@@ -306,7 +312,10 @@ dialog h2{font-size:30px;line-height:1.16;font-weight:400;letter-spacing:-.6px;m
  html[lang=ru] .field-title{letter-spacing:2px}
  .modular-title{grid-area:mt}.acoustic-title{grid-area:at;margin-top:20px}
  .source-bank{width:auto;grid-auto-columns:25%}
- .modular-bank{grid-area:mb;margin-top:22px}.acoustic-bank{grid-area:ab;margin-top:20px}
+ .modular-bank{grid-area:mb;margin-top:22px}
+ .rhythm-row{grid-area:ab;width:auto;height:auto;margin-top:16px;padding-bottom:18px}
+ .rhythm-level{width:min(156px,100%)}
+ .rhythm-note{left:0;right:0;top:auto;bottom:-2px;font-size:9px}
  .source{min-height:96px}.acoustic-bank .source{min-height:78px}
  .source::before{inset:-5px 3px 5px}
  .source-index{font-size:11px;letter-spacing:1px}
