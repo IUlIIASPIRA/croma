@@ -56,7 +56,7 @@ html[lang=ru] .module-key .key-name{letter-spacing:1px}
 .module-key:active,.lang-key:active{background:linear-gradient(165deg,#1718190b,#fff1);box-shadow:inset 0 2px 5px #0002}
 .module-key[aria-pressed=true]{background:linear-gradient(135deg,#ffffff27,#fff0);box-shadow:inset 0 1px 0 #ffffff80}
 .pilot{position:absolute;right:14px;top:18px;width:4px;height:4px;border-radius:50%;background:#414646;box-shadow:0 1px 0 #ffffff90;opacity:.55;transition:background .25s,box-shadow .25s}
-.module-key[aria-pressed=true] .pilot,.lang-key[aria-pressed=true] .pilot{background:#f7f7ed;box-shadow:0 0 5px #fff8,0 0 1px #2e3134;opacity:1}
+.module-key[aria-pressed=true] .pilot,.lang-key[aria-pressed=true] .pilot,.source[aria-pressed=true] .pilot{background:#f7f7ed;box-shadow:0 0 5px #fff8,0 0 1px #2e3134;opacity:1}
 .nav-invitation .module-key .pilot{animation:key-invite 1.9s ease-out both}
 .nav-invitation .module-key:nth-child(2) .pilot{animation-delay:.15s}.nav-invitation .module-key:nth-child(3) .pilot{animation-delay:.3s}.nav-invitation .module-key:nth-child(4) .pilot{animation-delay:.45s}
 @keyframes key-invite{0%,100%{background:#414646;box-shadow:0 1px 0 #fff6;opacity:.55}35%,65%{background:#fff;box-shadow:0 0 5px #fff;opacity:1}}
@@ -111,6 +111,7 @@ html[lang=ru] .field-title{letter-spacing:3px}
 html[lang=ru] .acoustic-bank .source-index{letter-spacing:.8px}
 .acoustic-bank .dot-glyph{margin:13px auto 0}
 .acoustic-bank .source{min-height:74px}
+.source .pilot{right:28px;top:4px}
 .source.selection-arrival .dot-glyph{animation:select-arrival .35s ease both}
 @keyframes select-arrival{0%{opacity:.4;transform:translateY(1px)}100%{opacity:1;transform:none}}
 .level-control{position:absolute;top:233px;width:44px;height:188px;cursor:ns-resize;touch-action:none;user-select:none;outline-offset:3px}
@@ -135,12 +136,13 @@ html[lang=ru] .blend-text{letter-spacing:1.3px}
 .fine-balance{position:relative;width:236px;height:48px;cursor:ew-resize;touch-action:none;user-select:none}
 .fine-rail{position:absolute;top:24px;left:0;right:0;height:1px;background:#292b2b;box-shadow:0 1px 0 #ffffff55}
 .fine-balance .black-puck{top:24px;width:20px;height:20px}
-.rhythm-row{position:absolute;left:220px;top:512px;width:244px;height:70px;display:grid;place-items:center}
-.rhythm-level{position:relative;width:156px;height:44px;cursor:ew-resize;touch-action:none;user-select:none}
-.rhythm-level .black-puck{left:calc(var(--rhythmVolume) * 1%)}
-.rhythm-level .control-readout{top:43px}
+.rhythm-row{position:absolute;left:320px;top:490px;width:44px;height:136px}
+.level-control.rhythm-level{position:absolute;left:0;top:0;height:136px;--value:var(--rhythmVolume)}
+.rhythm-level .level-rail{height:100px}
+.rhythm-level .level-cap{top:calc(15px + (100 - var(--value)) * 1px - 18px)}
+.rhythm-level .control-readout{top:50px;bottom:auto;left:auto;right:-26px;transform:none}
 .rhythm-level.is-off{opacity:.28;cursor:default}
-.rhythm-note{position:absolute;left:-40px;right:-40px;top:52px;margin:0;text-align:center;font-size:10px;letter-spacing:1.4px;white-space:nowrap}
+.rhythm-note{position:absolute;left:64px;top:52px;margin:0;text-align:left;font-size:10px;letter-spacing:1.4px;white-space:nowrap}
 .master-play{position:absolute;left:282px;top:699px;width:120px;height:65px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:opacity .18s,transform .12s}
 .master-play svg{width:27px;height:27px;transition:transform .18s}
 .master-play span{font-size:12px;line-height:20px;letter-spacing:4px;margin-left:4px}
@@ -228,9 +230,7 @@ body.entry-running .entrance{opacity:1;visibility:visible;pointer-events:auto}
 .entry-register i{background:#131918;border-radius:50%;opacity:.22}
 .entry-running .entry-register i{animation:entry-dot 1.8s ease both}.entry-register i:nth-child(3n){animation-delay:.15s!important}.entry-register i:nth-child(3n+1){animation-delay:.35s!important}.reverse i{animation-delay:.6s!important}
 @keyframes entry-dot{0%,100%{opacity:.3}40%,65%{opacity:1;box-shadow:0 1px 0 #fff7}}
-.entry-stack{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px}
-#skip-entry{display:inline-flex;align-items:center;gap:12px;height:34px;padding:0 14px 0 16px;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;opacity:.9}
-#skip-entry .thin-arrow{width:18px;height:11px;stroke-width:1.2;transition:transform .2s}#skip-entry:hover .thin-arrow{transform:translateX(2px)}
+#skip-entry{position:absolute;bottom:28px;right:32px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;line-height:30px;transition:opacity .2s}#skip-entry:hover{opacity:.7}
 
 /* Диалоги */
 dialog{width:min(700px,calc(100vw - 30px));max-height:calc(100dvh - 32px);border:1px solid #2228;padding:30px;color:#121515;background:#c4c7c7 url('../img/metal-tile.webp') center / 360px 90px;box-shadow:0 1px 0 #fff9 inset,0 25px 80px #06101144;overflow:auto;border-radius:3px}
@@ -316,9 +316,9 @@ dialog h2{font-size:30px;line-height:1.16;font-weight:400;letter-spacing:-.6px;m
  .modular-title{grid-area:mt}.acoustic-title{grid-area:at;margin-top:20px}
  .source-bank{width:auto;grid-auto-columns:25%}
  .modular-bank{grid-area:mb;margin-top:22px}
- .rhythm-row{grid-area:ab;width:auto;height:auto;margin-top:16px;padding-bottom:18px}
- .rhythm-level{width:min(156px,100%)}
- .rhythm-note{left:0;right:0;top:auto;bottom:-2px;font-size:9px}
+ .rhythm-row{grid-area:ab;justify-self:center;width:44px;height:136px;margin-top:14px}
+ .level-control.rhythm-level{position:absolute!important;left:0;top:0}
+ .rhythm-note{left:62px;top:54px;font-size:9px}
  .source{min-height:96px}.acoustic-bank .source{min-height:78px}
  .source::before{inset:-5px 3px 5px}
  .source-index{font-size:11px;letter-spacing:1px}

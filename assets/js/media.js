@@ -81,13 +81,13 @@ window.CROMA_MEDIA = {
     "en": "Live electronics / Buchla and modular synthesis"
    },
    "detail": {
-    "ru": "Живое модульное выступление участника команды. Электронный материал CROMA пишется на профессиональном модульном оборудовании, в том числе на Buchla, и развивается в композиции и на сцене.",
-    "en": "A live modular performance by a team member. The electronic material of CROMA is written on professional modular equipment, including Buchla, and developed through composition and performance."
+    "ru": "Электронный материал CROMA пишется на профессиональном модульном оборудовании, в том числе на Buchla, и развивается в композиции и на сцене. Фото Buchla: Franz Schuier, CC BY 2.0, чёрно-белая обработка.",
+    "en": "The electronic material of CROMA is written on professional modular equipment, including Buchla, and developed through composition and performance. Buchla photo: Franz Schuier, CC BY 2.0, converted to black and white."
    },
    "link": "",
-   "position": "50% 45%",
+   "position": "50% 50%",
    "type": "image",
-   "src": "assets/media/team-modular-53cf794575.webp"
+   "src": "assets/media/team-modular-25d98adfdd.webp"
   },
   {
    "id": "cello",

@@ -31,7 +31,7 @@ window.CromaMixer = (function () {
   const audio = { context: null, master: null, buses: {}, analyser: null, waveData: null,
     playing: false, startTime: 0, offset: 0, loading: null };
   let active = scenes[0] || null;
-  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 55 };
+  let mix = { blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 20 };
   const listeners = new Set();
   const emit = () => listeners.forEach(fn => fn());
 
@@ -53,7 +53,8 @@ window.CromaMixer = (function () {
     audio.analyser = ctx.createAnalyser(); audio.analyser.fftSize = 1024;
     audio.waveData = new Float32Array(audio.analyser.fftSize);
     audio.master.connect(audio.analyser); audio.analyser.connect(ctx.destination);
-    ctx.addEventListener('statechange', () => { if (audio.playing && ctx.state === 'interrupted') pause(); });
+    // iPhone может «прервать» звук (звонок, блокировка экрана) — возобновляем при первой возможности.
+    ctx.addEventListener('statechange', () => { if (audio.playing && ctx.state !== 'running') ctx.resume().catch(() => {}); });
     applyMix();
     return ctx;
   }
@@ -213,7 +214,10 @@ window.CromaMixer = (function () {
     return Math.sqrt(sum / audio.waveData.length);
   }
 
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+  // Лупы играют, пока открыт сайт: переключение вкладки или сворачивание окна их не останавливает.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && audio.playing && audio.context.state !== 'running') audio.context.resume().catch(() => {});
+  });
 
   return {
     scenes,

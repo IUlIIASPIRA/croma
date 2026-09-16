@@ -7,7 +7,7 @@
 <meta name="description" content="Original music, sound design and spatial systems at the intersection of electronic structure and acoustic warmth.">
 <title>CROMA — sound collective</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23b9babb'/%3E%3Cg fill='%23141414'%3E%3Ccircle cx='14' cy='12' r='3'/%3E%3Ccircle cx='24' cy='20' r='3'/%3E%3Ccircle cx='14' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/css/croma.css?v=abd8d44e">
+<link rel="stylesheet" href="assets/css/croma.css?v=e820497c">
 <script>
   // Язык выбирается до отрисовки, чтобы не мигал английский текст.
   (function () {
@@ -31,14 +31,12 @@
 </defs></svg>
 
 <div class="entrance" id="entrance" aria-hidden="true">
- <div class="entry-stack">
  <div class="entry-panel">
   <div class="entry-register" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="entry-center"><div class="entry-rail"><span></span></div><img src="assets/img/wordmark.png" alt="" width="202" height="33"></div>
   <div class="entry-register reverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
  </div>
- <button id="skip-entry" class="panel-button" tabindex="-1"><span data-i18n="skip">Skip intro</span><svg class="thin-arrow" aria-hidden="true"><use href="#arrow-thin"></use></svg></button>
- </div>
+ <button id="skip-entry" tabindex="-1"><span data-i18n="skip">Skip intro</span></button>
 </div>
 
 <div id="viewport" class="viewport">
@@ -99,7 +97,7 @@
 
     <h2 class="field-title acoustic-title" id="rhythm-heading" data-i18n="rhythm">RHYTHM</h2>
     <div class="rhythm-row">
-     <div class="rhythm-level" id="rhythm-level" role="slider" tabindex="0" aria-labelledby="rhythm-heading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55" data-param="rhythmVolume"><span class="polished-rail" aria-hidden="true"></span><span class="black-puck" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">55</span></div>
+     <div class="level-control rhythm-level" id="rhythm-level" role="slider" tabindex="0" aria-labelledby="rhythm-heading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" aria-orientation="vertical" data-param="rhythmVolume" data-vertical="true"><span class="level-rail" aria-hidden="true"></span><span class="level-cap" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">20</span></div>
      <p class="rhythm-note micro" id="rhythm-note" data-i18n="noRhythm" hidden>NO RHYTHM IN THIS SCENE</p>
     </div>
     <div class="blend-row">
@@ -168,9 +166,9 @@
  </form>
 </dialog>
 
-<script src="assets/js/media.js?v=e5a9ece6"></script>
+<script src="assets/js/media.js?v=4d5e98a4"></script>
 <script src="assets/js/content.js?v=5987b729"></script>
-<script src="assets/js/mixer.js?v=86eb2098"></script>
-<script src="assets/js/app.js?v=8b21a2ea"></script>
+<script src="assets/js/mixer.js?v=9fe01e9a"></script>
+<script src="assets/js/app.js?v=f9767339"></script>
 </body>
 </html>

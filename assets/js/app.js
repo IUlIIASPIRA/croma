@@ -8,7 +8,7 @@
   // Совпадает с медиазапросом ленты в croma.css.
   const flow = matchMedia('(max-width: 980px), (orientation: portrait) and (max-width: 1180px)');
   const state = { lang: document.documentElement.lang === 'ru' ? 'ru' : 'en', focus: null, work: 0,
-    blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 55 };
+    blend: 50, modularVolume: 55, acousticVolume: 55, rhythmVolume: 20 };
   const media = window.CROMA_MEDIA || { team: [], approach: null };
   const team = media.team;
 
@@ -257,7 +257,8 @@
       const glyph = document.createElement('span'); glyph.className = 'dot-glyph'; glyph.setAttribute('aria-hidden', 'true');
       for (let k = 0; k < 3; k++) glyph.appendChild(document.createElement('i'));
       const name = document.createElement('span'); name.className = 'source-name'; name.textContent = pick(scene.name);
-      button.append(label, glyph, name);
+      const pilot = document.createElement('i'); pilot.className = 'pilot'; pilot.setAttribute('aria-hidden', 'true');
+      button.append(label, glyph, name, pilot);
       if (scene.n === changed && !reduced.matches) button.classList.add('selection-arrival');
       button.addEventListener('click', () => {
         mixer.selectScene(scene.n);
