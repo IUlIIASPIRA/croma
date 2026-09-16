@@ -4,7 +4,7 @@
 
 window.CROMA_CONFIG = {
   // Адрес, на который форма готовит письмо. Пустой — кнопка отправки неактивна.
-  contactEmail: '',
+  contactEmail: 'spira.fx@gmail.com',
 
   // Фото, видео, звуки и подписи карточек лежат в папке media/ и собираются tools/build.py.
 
