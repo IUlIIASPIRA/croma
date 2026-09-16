@@ -26,8 +26,10 @@
     return blobUrls.get(data);
   }
   if (media.approach) {
-    panel.style.setProperty('--space-photo', `url("${media.approach.portrait}")`);
-    panel.style.setProperty('--space-photo-wide', `url("${media.approach.wide}")`);
+    // Путь делаем абсолютным: url() внутри CSS-переменной считается от файла стилей, а не от страницы.
+    const absolute = src => src.startsWith('data:') ? src : new URL(src, document.baseURI).href;
+    panel.style.setProperty('--space-photo', `url("${absolute(media.approach.portrait)}")`);
+    panel.style.setProperty('--space-photo-wide', `url("${absolute(media.approach.wide)}")`);
   }
 
   const t = (key, vars) => (TEXT[state.lang][key] || TEXT.en[key] || '').replace(/\{(\w+)\}/g, (_, k) => vars && vars[k] != null ? vars[k] : '');
