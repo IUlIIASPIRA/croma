@@ -7,7 +7,7 @@
 <meta name="description" content="Original music, sound design and spatial systems at the intersection of electronic structure and acoustic warmth.">
 <title>CROMA — sound collective</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23b9babb'/%3E%3Cg fill='%23141414'%3E%3Ccircle cx='14' cy='12' r='3'/%3E%3Ccircle cx='24' cy='20' r='3'/%3E%3Ccircle cx='14' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/css/croma.css?v=585c290f">
+<link rel="stylesheet" href="assets/css/croma.css?v=abd8d44e">
 <script>
   // Язык выбирается до отрисовки, чтобы не мигал английский текст.
   (function () {
@@ -25,16 +25,20 @@
  <symbol id="play-symbol" viewBox="0 0 28 28"><path fill="currentColor" stroke="none" d="M8 4v20l16-10z"/></symbol>
  <symbol id="pause-symbol" viewBox="0 0 28 28"><path stroke-width="4" d="M10 5v18M20 5v18"/></symbol>
  <symbol id="close-symbol" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+ <symbol id="arrow-out" viewBox="0 0 16 16"><path d="M4.5 11.5 11.5 4.5M5.5 4.5h6v6"/></symbol>
+ <symbol id="arrow-thin" viewBox="0 0 20 12"><path d="M1.5 6h16M12.5 1.5 17.5 6l-5 4.5"/></symbol>
  <symbol id="fullscreen-symbol" viewBox="0 0 20 20"><path d="M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5"/></symbol>
 </defs></svg>
 
 <div class="entrance" id="entrance" aria-hidden="true">
+ <div class="entry-stack">
  <div class="entry-panel">
   <div class="entry-register" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="entry-center"><div class="entry-rail"><span></span></div><img src="assets/img/wordmark.png" alt="" width="202" height="33"></div>
   <div class="entry-register reverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
  </div>
- <button id="skip-entry" tabindex="-1"><span data-i18n="skip">Skip intro</span> <b aria-hidden="true">↗</b></button>
+ <button id="skip-entry" class="panel-button" tabindex="-1"><span data-i18n="skip">Skip intro</span><svg class="thin-arrow" aria-hidden="true"><use href="#arrow-thin"></use></svg></button>
+ </div>
 </div>
 
 <div id="viewport" class="viewport">
@@ -117,7 +121,7 @@
      <button class="panel-button fullscreen-toggle" id="fullscreen-toggle" data-i18n-aria="fullscreen" data-i18n-title="fullscreen"><svg aria-hidden="true"><use href="#fullscreen-symbol"></use></svg></button>
     </div>
     <div class="work-caption" aria-live="polite"><h3 id="work-title"></h3><p id="work-credit"></p></div>
-    <button class="credit-link" id="credit-link"><span data-i18n="aboutProject">ABOUT THE PROJECT</span> <b aria-hidden="true">↗</b></button>
+    <button class="credit-link" id="credit-link"><span data-i18n="aboutProject">ABOUT THE PROJECT</span><svg class="out-arrow" aria-hidden="true"><use href="#arrow-out"></use></svg></button>
    </section>
 
    <section class="face fragment" id="fragment" data-module="fragments" tabindex="-1" aria-labelledby="fragment-label">
@@ -143,7 +147,7 @@
  <div class="dialog-header"><div><span class="eyebrow" id="info-eyebrow"></span><h2 id="info-title"></h2></div><button class="close-dialog" data-i18n-aria="close"><svg aria-hidden="true"><use href="#close-symbol"></use></svg></button></div>
  <p id="info-body" class="dialog-body"></p>
  <p class="dialog-note" id="info-note"></p>
- <a class="plain-action" id="info-link" target="_blank" rel="noopener" hidden></a>
+ <a class="plain-action" id="info-link" target="_blank" rel="noopener" hidden><span id="info-link-text"></span><svg class="out-arrow" aria-hidden="true"><use href="#arrow-out"></use></svg></a>
 </dialog>
 
 <dialog class="media-dialog" id="media-dialog" aria-labelledby="media-title">
@@ -165,8 +169,8 @@
 </dialog>
 
 <script src="assets/js/media.js?v=e5a9ece6"></script>
-<script src="assets/js/content.js?v=2e2e5ea0"></script>
+<script src="assets/js/content.js?v=35ece9ac"></script>
 <script src="assets/js/mixer.js?v=86eb2098"></script>
-<script src="assets/js/app.js?v=ce22c810"></script>
+<script src="assets/js/app.js?v=8b21a2ea"></script>
 </body>
 </html>

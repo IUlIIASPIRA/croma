@@ -150,7 +150,7 @@
     $('info-body').textContent = body;
     $('info-note').textContent = note;
     $('info-link').hidden = !link;
-    if (link) { $('info-link').href = link; $('info-link').textContent = `${t('watchFull')} ↗`; }
+    if (link) { $('info-link').href = link; $('info-link-text').textContent = t('watchFull'); }
     openDialog($('info-dialog'));
   }
 
