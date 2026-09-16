@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#b9babb">
+<meta name="description" content="Original music, sound design and spatial systems at the intersection of electronic structure and acoustic warmth.">
+<title>CROMA — sound collective</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23b9babb'/%3E%3Cg fill='%23141414'%3E%3Ccircle cx='14' cy='12' r='3'/%3E%3Ccircle cx='24' cy='20' r='3'/%3E%3Ccircle cx='14' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/croma.css">
+<script>
+  // Язык выбирается до отрисовки, чтобы не мигал английский текст.
+  (function () {
+    var q = new URLSearchParams(location.search).get('lang');
+    var saved = null; try { saved = localStorage.getItem('croma-lang'); } catch (e) {}
+    var lang = q || saved || ((navigator.language || '').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en');
+    document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  })();
+</script>
+</head>
+<body>
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+ <symbol id="arrow-right" viewBox="0 0 32 24"><path d="M3 12h25M19 3l9 9-9 9"/></symbol>
+ <symbol id="arrow-left" viewBox="0 0 32 24"><path d="M29 12H4m9-9-9 9 9 9"/></symbol>
+ <symbol id="play-symbol" viewBox="0 0 28 28"><path fill="currentColor" stroke="none" d="M8 4v20l16-10z"/></symbol>
+ <symbol id="pause-symbol" viewBox="0 0 28 28"><path stroke-width="4" d="M10 5v18M20 5v18"/></symbol>
+ <symbol id="close-symbol" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+ <symbol id="fullscreen-symbol" viewBox="0 0 20 20"><path d="M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5"/></symbol>
+</defs></svg>
+
+<div class="entrance" id="entrance" aria-hidden="true">
+ <div class="entry-panel">
+  <div class="entry-register" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="entry-center"><div class="entry-rail"><span></span></div><img src="assets/img/wordmark.png" alt="" width="202" height="33"></div>
+  <div class="entry-register reverse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ </div>
+ <button id="skip-entry" tabindex="-1"><span data-i18n="skip">Skip intro</span> <b aria-hidden="true">↗</b></button>
+</div>
+
+<div id="viewport" class="viewport">
+ <div class="console-fit" id="console-fit">
+  <main class="console" id="console" aria-label="CROMA">
+   <div class="material-light" aria-hidden="true"><i class="light-map cool"></i><i class="light-map neutral"></i><i class="light-map warm"></i></div>
+
+   <header class="console-header">
+    <button class="brand" id="brand" data-i18n-aria="brandLabel">
+     <img src="assets/img/wordmark.png" alt="CROMA" width="202" height="33">
+     <span class="micro brand-sub" data-i18n="brandSub">SOUND COLLECTIVE</span>
+    </button>
+    <div class="brand-services micro" data-i18n-html="services"></div>
+    <div class="lang-switch" role="group" data-i18n-aria="language">
+     <button class="lang-key" data-lang="en" aria-pressed="false">EN<i class="pilot" aria-hidden="true"></i></button>
+     <button class="lang-key" data-lang="ru" aria-pressed="false">RU<i class="pilot" aria-hidden="true"></i></button>
+    </div>
+    <nav class="module-nav" data-i18n-aria="navLabel">
+     <button class="module-key" data-focus="team" aria-controls="team" aria-pressed="false"><span class="key-index">01</span><span class="key-name" data-i18n="navTeam">TEAM</span><i class="pilot" aria-hidden="true"></i></button>
+     <button class="module-key" data-focus="approach" aria-controls="approach" aria-pressed="false"><span class="key-index">02</span><span class="key-name" data-i18n="navApproach">APPROACH</span><i class="pilot" aria-hidden="true"></i></button>
+     <button class="module-key" data-focus="fragments" aria-controls="player fragment" aria-pressed="false"><span class="key-index">03</span><span class="key-name" data-i18n="navFragments">FRAGMENTS</span><i class="pilot" aria-hidden="true"></i></button>
+     <button class="module-key" data-focus="contact" aria-controls="contact" aria-pressed="false"><span class="key-index">04</span><span class="key-name" data-i18n="navContact">CONTACT</span><i class="pilot" aria-hidden="true"></i></button>
+    </nav>
+    <div class="time-note micro"><span data-i18n-html="timeNote"></span><span class="ink-rule"></span></div>
+   </header>
+
+   <section class="face intro-copy" id="about">
+    <span class="ink-rule intro-rule" aria-hidden="true"></span>
+    <h1 data-i18n-html="intro"></h1>
+    <p class="practice-list micro" data-i18n-html="practices"></p>
+   </section>
+
+   <section class="face approach" id="approach" data-module="approach" tabindex="-1" aria-labelledby="approach-label">
+    <span class="space-photo" aria-hidden="true"></span>
+    <div class="approach-copy">
+     <h2 class="module-label" id="approach-label" data-i18n="approach">APPROACH</h2><span class="ink-rule" aria-hidden="true"></span>
+     <div class="method-list" id="method-list"></div>
+    </div>
+   </section>
+
+   <aside class="face built"><p class="micro" data-i18n-html="built"></p></aside>
+
+   <section class="face player" id="player" data-module="fragments" tabindex="-1" aria-labelledby="modular-heading">
+    <h2 class="field-title modular-title" id="modular-heading" data-i18n="modularField">MODULAR FIELD</h2>
+    <div class="source-bank modular-bank" id="modular-bank" role="group" aria-labelledby="modular-heading"></div>
+
+    <div class="level-control modular-level" role="slider" tabindex="0" data-i18n-aria="modularVolume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55" aria-orientation="vertical" data-param="modularVolume" data-vertical="true">
+     <span class="level-rail" aria-hidden="true"></span><span class="level-cap" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">55</span>
+    </div>
+    <div class="level-control acoustic-level" role="slider" tabindex="0" data-i18n-aria="acousticVolume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="55" aria-orientation="vertical" data-param="acousticVolume" data-vertical="true">
+     <span class="level-rail" aria-hidden="true"></span><span class="level-cap" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">55</span>
+    </div>
+    <span class="micro side-label modular-side" data-i18n="modularSide">MODULAR</span><span class="micro side-label acoustic-side" data-i18n="acousticSide">ACOUSTIC</span>
+    <div class="main-balance" role="slider" tabindex="0" data-i18n-aria="balance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-param="blend">
+     <span class="polished-rail" aria-hidden="true"></span><span class="black-puck" aria-hidden="true"></span><span class="control-readout" aria-hidden="true">50 / 50</span>
+    </div>
+    <div class="signal-pin" id="signal-pin" aria-hidden="true"></div>
+
+    <h2 class="field-title acoustic-title" id="acoustic-heading" data-i18n="acousticField">ACOUSTIC FIELD</h2>
+    <div class="source-bank acoustic-bank" id="acoustic-bank" role="group" aria-labelledby="acoustic-heading"></div>
+    <div class="blend-row">
+     <span class="micro blend-text" data-i18n-html="electronic"></span>
+     <div class="fine-balance" role="slider" tabindex="0" data-i18n-aria="balance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-param="blend"><span class="fine-rail" aria-hidden="true"></span><span class="black-puck" aria-hidden="true"></span></div>
+     <span class="micro blend-text acoustic-text" data-i18n-html="warmth"></span>
+    </div>
+    <button class="master-play" id="play"><svg aria-hidden="true"><use href="#play-symbol"></use></svg><span id="play-text">PLAY</span></button>
+    <p class="player-instruction" id="player-instruction" aria-live="polite"></p>
+   </section>
+
+   <section class="face works" id="team" data-module="team" tabindex="-1" aria-labelledby="team-label">
+    <div class="works-header"><h2 class="module-label" id="team-label" data-i18n="team">TEAM EXPERIENCE</h2><span class="micro work-counter" id="work-counter">01 / 04</span>
+     <div class="work-arrows"><button id="previous-work" data-i18n-aria="previous"><svg aria-hidden="true"><use href="#arrow-left"></use></svg></button><button id="next-work" data-i18n-aria="next"><svg aria-hidden="true"><use href="#arrow-right"></use></svg></button></div>
+    </div>
+    <div class="work-window" id="work-window">
+     <img id="work-image" alt="">
+     <video id="work-video" hidden controls playsinline preload="none"></video>
+     <button class="panel-button fullscreen-toggle" id="fullscreen-toggle" data-i18n-aria="fullscreen" data-i18n-title="fullscreen"><svg aria-hidden="true"><use href="#fullscreen-symbol"></use></svg></button>
+    </div>
+    <div class="work-caption" aria-live="polite"><h3 id="work-title"></h3><p id="work-credit"></p></div>
+    <button class="credit-link" id="credit-link"><span data-i18n="aboutProject">ABOUT THE PROJECT</span> <b aria-hidden="true">↗</b></button>
+   </section>
+
+   <section class="face fragment" id="fragment" data-module="fragments" tabindex="-1" aria-labelledby="fragment-label">
+    <h2 class="module-label" id="fragment-label" data-i18n="selectedMix">SELECTED MIX</h2>
+    <button class="fragment-play" id="fragment-play"><svg aria-hidden="true"><use href="#play-symbol"></use></svg></button>
+    <div class="waveform-wrap"><canvas id="waveform" width="540" height="84" aria-hidden="true"></canvas><span class="playhead" id="playhead" hidden></span></div>
+    <p class="fragment-time micro" id="fragment-time">00:00 / 00:00</p>
+   </section>
+
+   <section class="face contact" id="contact" data-module="contact" tabindex="-1" aria-labelledby="contact-label">
+    <h2 class="module-label" id="contact-label" data-i18n="contact">CONTACT</h2><span class="ink-rule" aria-hidden="true"></span><p data-i18n="collaborate">Let’s collaborate.</p>
+    <button class="contact-action" id="contact-action" data-i18n-aria="startEnquiry"><svg aria-hidden="true"><use href="#arrow-right"></use></svg></button>
+   </section>
+
+   <footer class="face footer-center"><p class="micro" data-i18n="footer">LISTEN. EXPLORE. COLLABORATE.</p><span class="ink-rule" aria-hidden="true"></span></footer>
+   <aside class="face signoff"><p class="micro" data-i18n-html="signoff"></p><span class="ink-rule" aria-hidden="true"></span></aside>
+  </main>
+ </div>
+</div>
+<div class="sr-only" id="announcement" role="status" aria-live="polite"></div>
+
+<dialog class="info-dialog" id="info-dialog" aria-labelledby="info-title">
+ <div class="dialog-header"><div><span class="eyebrow" id="info-eyebrow"></span><h2 id="info-title"></h2></div><button class="close-dialog" data-i18n-aria="close"><svg aria-hidden="true"><use href="#close-symbol"></use></svg></button></div>
+ <p id="info-body" class="dialog-body"></p>
+ <p class="dialog-note" id="info-note"></p>
+ <a class="plain-action" id="info-link" target="_blank" rel="noopener" hidden></a>
+</dialog>
+
+<dialog class="media-dialog" id="media-dialog" aria-labelledby="media-title">
+ <div class="dialog-header"><div><span class="eyebrow" data-i18n="team">TEAM EXPERIENCE</span><h2 id="media-title"></h2></div><button class="close-dialog" data-i18n-aria="close"><svg aria-hidden="true"><use href="#close-symbol"></use></svg></button></div>
+ <div class="full-media"><img id="media-image" alt=""></div>
+ <p id="media-credit" class="dialog-note"></p>
+</dialog>
+
+<dialog class="enquiry-dialog" id="enquiry-dialog" aria-labelledby="enquiry-title">
+ <div class="dialog-header"><div><span class="eyebrow" data-i18n="enquiryEyebrow">CROMA / PROJECT ENQUIRY</span><h2 id="enquiry-title" data-i18n="collaborate">Let’s collaborate.</h2></div><button class="close-dialog" data-i18n-aria="close"><svg aria-hidden="true"><use href="#close-symbol"></use></svg></button></div>
+ <p class="dialog-body" data-i18n="enquiryIntro"></p>
+ <form id="enquiry-form">
+  <label><span data-i18n="name">Name</span><input name="name" autocomplete="name" required maxlength="100"></label>
+  <label><span data-i18n="email">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+  <label><span data-i18n="brief">About the project</span><textarea name="brief" required rows="4" maxlength="5000" data-i18n-placeholder="briefPlaceholder"></textarea></label>
+  <p class="dialog-note" data-i18n="submitNote"></p>
+  <button class="solid-action" id="enquiry-submit" data-i18n="submit">Prepare email</button>
+ </form>
+</dialog>
+
+<script src="assets/js/media.js"></script>
+<script src="assets/js/content.js"></script>
+<script src="assets/js/mixer.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
