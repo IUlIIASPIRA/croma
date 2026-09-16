@@ -111,7 +111,11 @@ html[lang=ru] .field-title{letter-spacing:3px}
 html[lang=ru] .acoustic-bank .source-index{letter-spacing:.8px}
 .acoustic-bank .dot-glyph{margin:13px auto 0}
 .acoustic-bank .source{min-height:74px}
-.source .pilot{right:28px;top:4px}
+.source .pilot{right:28px;top:4px;--beat:0}
+.source[aria-pressed=true] .pilot{background:#f7f7ed;opacity:calc(.7 + var(--beat) * .3);
+ transform:scale(calc(1 + var(--beat) * .45));
+ box-shadow:0 0 calc(2px + var(--beat) * 11px) rgba(255,255,255,calc(.28 + var(--beat) * .72)),0 0 2px #2e3134cc}
+.source:not([aria-pressed=true]) .pilot{opacity:calc(.5 + var(--beat) * .25)}
 .source.selection-arrival .dot-glyph{animation:select-arrival .35s ease both}
 @keyframes select-arrival{0%{opacity:.4;transform:translateY(1px)}100%{opacity:1;transform:none}}
 .level-control{position:absolute;top:233px;width:44px;height:188px;cursor:ns-resize;touch-action:none;user-select:none;outline-offset:3px}

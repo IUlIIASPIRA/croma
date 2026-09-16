@@ -14,6 +14,8 @@
 window.CromaMixer = (function () {
   const media = window.CROMA_MEDIA || { loop: { padding: 0.5 }, scenes: [] };
   const padding = media.loop.padding || 0;
+  const beatsPerBar = media.loop.beatsPerBar || 4;
+  const beatSeconds = media.loop.bpm ? 60 / media.loop.bpm : 0;
   const CROSSFADE = 0.12;
   const ROLES = ['modular', 'acoustic', 'rhythm'];
 
@@ -226,6 +228,8 @@ window.CromaMixer = (function () {
     get playing() { return audio.playing; },
     get anyConfigured() { return scenes.some(scene => scene.layers.length); },
     hasLayer(role) { return !!(active && active.layers.some(layer => layer.role === role)); },
+    get beatSeconds() { return beatSeconds; },
+    get beatsPerBar() { return beatsPerBar; },
     load, play, pause, phase, level, busGains, selectScene,
     setMix(values) { mix = { ...mix, ...values }; applyMix(); },
     onChange(fn) { listeners.add(fn); }

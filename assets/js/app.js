@@ -386,12 +386,27 @@
     panel.style.setProperty('--light-neutral', String((1 - Math.abs(2 * weight - 1)) * strength * 0.5));
     panel.style.setProperty('--light-warm', String(Math.max(0, 2 * weight - 1) * strength));
   }
+  // Индикаторы сцен вспыхивают в такт: первая доля ярче, остальные мягче.
+  function paintBeat() {
+    const beat = mixer.beatSeconds;
+    const live = mixer.playing && beat > 0 && mixer.hasLayer('rhythm') && mixer.busGains().rhythm > 0.01;
+    let value = 0;
+    if (live) {
+      const position = mixer.phase() / beat;
+      const accent = Math.floor(position) % mixer.beatsPerBar === 0 ? 1 : 0.6;
+      value = accent * Math.exp(-(position - Math.floor(position)) * 5);
+    }
+    document.querySelectorAll('#scene-bank .pilot').forEach(pilot => {
+      pilot.style.setProperty('--beat', value.toFixed(3));
+    });
+  }
+
   let frame = 0, lastPaint = 0;
   function animate() {
     cancelAnimationFrame(frame);
     const tick = now => {
-      if (!mixer.playing) { renderTime(); $('signal-pin').classList.remove('is-audible'); return; }
-      renderTime();
+      if (!mixer.playing) { renderTime(); paintBeat(); $('signal-pin').classList.remove('is-audible'); return; }
+      renderTime(); paintBeat();
       if (!reduced.matches && now - lastPaint > 45) {
         lastPaint = now;
         const rms = mixer.level();

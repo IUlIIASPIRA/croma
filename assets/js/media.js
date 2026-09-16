@@ -130,6 +130,7 @@ window.CROMA_MEDIA = {
      "src": "assets/media/scene-1-acoustic-17c5ddb3e5.m4a"
     }
    },
+   "gain": 1.0,
    "seconds": 32.0
   },
   {
@@ -148,6 +149,7 @@ window.CROMA_MEDIA = {
      "src": "assets/media/scene-2-acoustic-6cf47b3b45.m4a"
     }
    },
+   "gain": 1.0,
    "seconds": 25.0
   }
  ]
