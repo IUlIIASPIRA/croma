@@ -251,7 +251,7 @@ dialog h2{font-size:30px;line-height:1.16;font-weight:400;letter-spacing:-.6px;m
 /* ---------- Лента для телефонов и планшетов в портрете ----------
    Совпадает с FLOW_QUERY в app.js. */
 @media (max-width:980px), (orientation:portrait) and (max-width:1180px){
- html,body{height:auto;overflow:visible;overflow-x:hidden}
+ html,body{height:auto;overflow:visible;overflow-x:clip}
  body{background:#b3b7b7 url('../img/metal-tile.webp') center top / 360px 90px}
  .viewport,.viewport.is-tall{position:static;display:block;overflow:visible;background:none;padding:0}
  .console-fit{width:auto;height:auto}
