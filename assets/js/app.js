@@ -35,6 +35,11 @@
   const t = (key, vars) => (TEXT[state.lang][key] || TEXT.en[key] || '').replace(/\{(\w+)\}/g, (_, k) => vars && vars[k] != null ? vars[k] : '');
   const pick = value => (value && typeof value === 'object') ? (value[state.lang] || value.en) : value;
 
+  // Рамку фокуса показываем только при работе с клавиатуры: от мыши и пальца она лишняя.
+  const markInput = mode => document.documentElement.dataset.input = mode;
+  addEventListener('pointerdown', () => markInput('pointer'), true);
+  addEventListener('keydown', e => { if (e.key === 'Tab' || e.key.startsWith('Arrow') || e.key === ' ' || e.key === 'Enter') markInput('key'); }, true);
+
   let announceTimer;
   function announce(message) {
     clearTimeout(announceTimer);
@@ -157,11 +162,12 @@
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.body.classList.contains('entry-running')) return dismissEntrance();
     if (document.querySelector('dialog[open]')) return;
-    if (e.target.closest('input,textarea,select,video,[role=slider]')) return;
+    const target = e.target instanceof Element ? e.target : null;
+    if (target && target.closest('input,textarea,select,video,[role=slider]')) return;
     if (!e.metaKey && !e.ctrlKey && !e.altKey && /^[1-4]$/.test(e.key)) {
       e.preventDefault(); focusModule(['team', 'approach', 'fragments', 'contact'][Number(e.key) - 1]);
     } else if (e.key === 'Escape') focusModule(null);
-    else if (e.code === 'Space' && !e.target.closest('button,a')) { e.preventDefault(); togglePlayback(); }
+    else if (e.code === 'Space' && !(target && target.closest('button,a'))) { e.preventDefault(); togglePlayback(); }
   });
 
   /* ---------- Подход ---------- */
